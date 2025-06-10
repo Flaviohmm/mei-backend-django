@@ -9,3 +9,8 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.name
+    
+    def save(self, *args, **kwargs):
+        if not self.username: # Se username não for fornecido
+            self.username = self.email # Ou use outro método para gerá-lo
+        super().save(*args, **kwargs)
