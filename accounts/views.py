@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import User
 from .serializers import UserSerializer, LoginSerializer
@@ -22,12 +23,31 @@ def login(request):
         if serializer.is_valid():
             email = serializer.validated_data['email']
             password = serializer.validated_data['password']
-            user = authenticate(username=email, password=password)
+            user = authenticate(request, username=email, password=password)
             if user is not None:
                 # Gere ou recupere o token do usuário
                 token, created = Token.objects.get_or_create(user=user)
-                return Response({'token': token.key}, status=status.HTTP_200_OK)
+                user_data = UserSerializer(user).data
+                return Response({'token': token.key, **user_data}, status=status.HTTP_200_OK)
             else:
                 return Response({'error': 'Credenciais inválidas.'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_details(request):
+    user = request.user
+    return Response({
+        'name': user.name,
+        'email': user.email,
+    })
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout(request):
+    try:
+        token = Token.objects.get(user=request.user)
+        token.delete()
+        return Response({'message': 'Logout bem-sucedido.'}, status=status.HTTP_200_OK)
+    except Token.DoesNotExist:
+        return Response({'error': 'Token não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
