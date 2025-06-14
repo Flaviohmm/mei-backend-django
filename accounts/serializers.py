@@ -18,6 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
         user.save() # Salva o usuário
         return user
     
+    
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
@@ -28,3 +29,22 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Credenciais inválidas.")
         return data
     
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not value:
+            raise serializers.ValidationError("Email é obrigatório.")
+        return value
+    
+
+class ResetPasswordSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(min_length=8)
+
+    def validate_new_password(self, value):
+        if len(value) < 8:
+            raise serializers.ValidationError("A senha deve ter pelo menos 8 caracteres.")
+        return value

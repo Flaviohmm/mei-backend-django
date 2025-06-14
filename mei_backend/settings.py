@@ -71,6 +71,57 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8080",
 ]
 
+# Configurações de Email
+# Para produção com Gmail (descomente e configure)
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'seu-email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'sua-senha-de-app'  # Use App Password, não senha normal
+# DEFAULT_FROM_EMAIL = 'seu-email@gmail.com'
+
+# Para outros provedores (exemplo: SendGrid)
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.sendgrid.net'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'apikey'
+# EMAIL_HOST_PASSWORD = 'sua-api-key-do-sendgrid'
+# DEFAULT_FROM_EMAIL = 'noreply@seudominio.com'
+
+# URL do frontend para os links de recuperação
+FRONTEND_URL = 'http://localhost:8080'
+
+# Para desenvolvimento, você pode usar o console backend:
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Para debug
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        '__main__': {  # ou o nome do seu app
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
+
 ROOT_URLCONF = 'mei_backend.urls'
 
 TEMPLATES = [
@@ -124,9 +175,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pt-br'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Recife'
 
 USE_I18N = True
 
