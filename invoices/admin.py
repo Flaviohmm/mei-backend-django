@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+from decimal import Decimal, InvalidOperation
 from .models import Invoice
 
 @admin.register(Invoice)
@@ -121,11 +122,15 @@ class InvoiceAdmin(admin.ModelAdmin):
         """Exibe o total na lista"""
         try:
             total = obj.total_value
+            # Garantir que total é um Decimal e converter para float
+            if not isinstance(total, Decimal):
+                total = Decimal(str(total))
+            
             return format_html(
-                '<strong style="color: #28a745;">R$ {:.2f}</strong>', 
-                total
+                '<strong style="color: #28a745;">R$ {}</strong>', 
+                f"{float(total):.2f}"
             )
-        except Exception:
+        except (ValueError, TypeError, InvalidOperation) as e:
             return format_html(
                 '<span style="color: #dc3545;">Erro</span>'
             )
@@ -135,23 +140,43 @@ class InvoiceAdmin(admin.ModelAdmin):
     def display_total_detail(self, obj):
         """Exibe detalhes do total no formulário"""
         try:
-            value = obj.value or 0
+            # Obter valores de forma segura, convertendo para Decimal primeiro
+            value = obj.value if obj.value is not None else Decimal('0.00')
+            tax_rate = obj.tax if obj.tax is not None else Decimal('0.00')
+            
+            # Garantir que são Decimal
+            if not isinstance(value, Decimal):
+                value = Decimal(str(value))
+            if not isinstance(tax_rate, Decimal):
+                tax_rate = Decimal(str(tax_rate))
+            
+            # Calcular valores
             tax_amount = obj.tax_amount
             total = obj.total_value
             
+            # Garantir que tax_amount e total são Decimal
+            if not isinstance(tax_amount, Decimal):
+                tax_amount = Decimal(str(tax_amount))
+            if not isinstance(total, Decimal):
+                total = Decimal(str(total))
+            
+            # Converter para float apenas no momento da formatação
             return format_html(
                 '''
-                <div style="background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                <div style="background: #1f2937; padding: 10px; border-radius: 5px;">
                     <strong>Cálculo do Total:</strong><br>
-                    Valor: R$ {:.2f}<br>
-                    Imposto: R$ {:.2f}<br>
+                    Valor: R$ {}<br>
+                    Imposto ({}%): R$ {}<br>
                     <hr style="margin: 5px 0;">
-                    <strong>Total: R$ {:.2f}</strong>
+                    <strong>Total: R$ {}</strong>
                 </div>
                 ''',
-                value, tax_amount, total
+                f"{float(value):.2f}",
+                f"{float(tax_rate):.2f}",
+                f"{float(tax_amount):.2f}",
+                f"{float(total):.2f}"
             )
-        except Exception as e:
+        except (ValueError, TypeError, InvalidOperation) as e:
             return format_html(
                 '<span style="color: #dc3545;">Erro no cálculo: {}</span>',
                 str(e)
@@ -162,8 +187,10 @@ class InvoiceAdmin(admin.ModelAdmin):
         """Exibe o valor do imposto"""
         try:
             tax_amount = obj.tax_amount
-            return f"R$ {tax_amount:.2f}"
-        except Exception:
+            if not isinstance(tax_amount, Decimal):
+                tax_amount = Decimal(str(tax_amount))
+            return f"R$ {float(tax_amount):.2f}"
+        except (ValueError, TypeError, InvalidOperation):
             return "R$ 0,00"
     display_tax_amount.short_description = 'Valor do Imposto'
     

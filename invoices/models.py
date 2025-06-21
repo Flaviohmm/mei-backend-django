@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.core.validators import RegexValidator, EmailValidator
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 import uuid
 
 class Invoice(models.Model):
@@ -166,9 +166,13 @@ class Invoice(models.Model):
             return Decimal('0.00')
         
         try: 
-            tax_amount = (self.value * self.tax) / 100
-            return self.value + tax_amount
-        except (TypeError, ValueError):
+            # Garantir que value e tax são Decimal
+            value = Decimal(str(self.value)) if not isinstance(self.value, Decimal) else self.value
+            tax = Decimal(str(self.tax)) if not isinstance(self.tax, Decimal) else self.tax
+            
+            tax_amount = value * tax
+            return value + tax_amount
+        except (TypeError, ValueError, InvalidOperation):
             return Decimal('0.00')
 
     @property
@@ -179,8 +183,10 @@ class Invoice(models.Model):
             return Decimal('0.00')
         
         try:
-            return (self.value * self.tax) / 100
-        except (TypeError, ValueError):
+            # Garantir que value e tax são Decimal
+            value = Decimal(str(self.value)) if not isinstance(self.value, Decimal) else self.value
+            tax = Decimal(str(self.tax)) if not isinstance(self.tax, Decimal) else self.tax
+            
+            return value * tax
+        except (TypeError, ValueError, InvalidOperation):
             return Decimal('0.00')
-
-        
